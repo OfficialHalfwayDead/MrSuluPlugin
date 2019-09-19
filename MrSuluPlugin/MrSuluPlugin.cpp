@@ -148,7 +148,8 @@ void MrSuluPlugin::onUnload() {
 
 void MrSuluPlugin::drawStringAt(CanvasWrapper cw, std::string text, int x, int y, Color col)
 {
-	cw.SetPosition({ x, y });
+	Vector2 pos = { x, y };
+	cw.SetPosition(pos);
 	cw.SetColor(col.r, col.g, col.b, col.a);
 	cw.DrawString(text);
 }
@@ -160,7 +161,7 @@ void MrSuluPlugin::drawStringAt(CanvasWrapper cw, std::string text, Vector2 loc,
 
 void MrSuluPlugin::drawTimerPanel(CanvasWrapper cw) //, int x, int y)
 {
-	Vector2 size = cw.GetSize();
+	Vector2 canvas_size = cw.GetSize();
 
 	int marginLeft = 10;
 	int marginTop = 10;
@@ -171,12 +172,15 @@ void MrSuluPlugin::drawTimerPanel(CanvasWrapper cw) //, int x, int y)
 	int lineSpacing = 20;
 
 	int panelMargin = 10;
-	int x = size.X - panelMargin - width;
+	int x = canvas_size.X - panelMargin - width;
 	int y = panelMargin;
 
-	cw.SetPosition({ x, y });
+	Vector2 pos = { x, y };
+	Vector2 size = { width, height };
+
+	cw.SetPosition(pos);
 	cw.SetColor(COLOR_PANEL);
-	cw.FillBox({ width, height });
+	cw.FillBox(size);
 	cw.SetColor(COLOR_TEXT);
 
 	int currentY = y + marginTop;
@@ -232,44 +236,28 @@ void MrSuluPlugin::canvasLog(std::string msg) {
 
 
 BallWrapper MrSuluPlugin::GetGameBall() {
-	TutorialWrapper training = gameWrapper->GetGameEventAsTutorial();
-	if (training.IsNull()) {
-		ServerWrapper server = gameWrapper->GetGameEventAsServer();
-		return server.GetBall();
-	}
-	return training.GetBall();
+	ServerWrapper server = gameWrapper->GetGameEventAsServer();
+	return server.GetBall();
 }
 
 bool MrSuluPlugin::IsCarReady() {
-	TutorialWrapper training = gameWrapper->GetGameEventAsTutorial();
-	if (training.IsNull()) {
-		ServerWrapper server = gameWrapper->GetGameEventAsServer();
-		auto players = gameWrapper->GetGameEventAsServer().GetCars();
-		return (players.Count() >= 1);
-	}
-	return !training.GetGameCar().IsNull();
+	ServerWrapper server = gameWrapper->GetGameEventAsServer();
+	auto players = gameWrapper->GetGameEventAsServer().GetCars();
+	return (players.Count() >= 1);
 }
 
 CarWrapper MrSuluPlugin::GetGameCar() {
-	TutorialWrapper training = gameWrapper->GetGameEventAsTutorial();
-	if (training.IsNull()) {
-		ServerWrapper server = gameWrapper->GetGameEventAsServer();
-		auto players = gameWrapper->GetGameEventAsServer().GetCars();
-		if (players.Count() >= 1) {
-			return players.Get(0);
-		}
+	ServerWrapper server = gameWrapper->GetGameEventAsServer();
+	auto players = gameWrapper->GetGameEventAsServer().GetCars();
+	if (players.Count() >= 1) {
+		return players.Get(0);
 	}
-	return training.GetGameCar();
+	return NULL;
 }
 
 float MrSuluPlugin::GetSecondsElapsed() {
-	TutorialWrapper training = gameWrapper->GetGameEventAsTutorial();
-	if (training.IsNull()) {
-		ServerWrapper server = gameWrapper->GetGameEventAsServer();
-		return server.GetSecondsElapsed();
-	}
-	
-	return training.GetSecondsElapsed();
+	ServerWrapper server = gameWrapper->GetGameEventAsServer();
+	return server.GetSecondsElapsed();
 }
 
 void MrSuluPlugin::OnHitBall(std::string eventName) {
@@ -402,8 +390,6 @@ void MrSuluPlugin::OnTick(std::string funcName)
 {
 	if (canBeEnabled())
 	{
-		TutorialWrapper training = gameWrapper->GetGameEventAsTutorial();
-
 		ServerWrapper server = gameWrapper->GetGameEventAsServer();
 
 		if (server.IsNull()) return; //or crash
@@ -522,38 +508,38 @@ void MrSuluPlugin::OnTick(std::string funcName)
 				}
 			}
 
-			//if scored
-			if (!training.IsNull()) { //how to do it without training ?
+			////if scored
+			//if (!training.IsNull()) { //how to do it without training ?
 
-				/*
-				stringstream stream;
-				stream << server.IsNull();
-				string s = stream.str();
-				log("server is null ? " + s);
-				*/
+			//	/*
+			//	stringstream stream;
+			//	stream << server.IsNull();
+			//	string s = stream.str();
+			//	log("server is null ? " + s);
+			//	*/
 
-				/*
-				if (training.IsInGoal(ball.GetLocation()))
-				{
-					if (timerScore < 1) { //display it once only
-						timerDisplay("score");
-						timerScore++;
-					}
-				}
-				*/
-			}
-			else {
-				/*
-				stringstream stream;
-				//stream << server.GetTotalScore(); //always 0 in custom training
-				auto goals = server.GetGoals();
-				stream << goals.Count();
-				string s = stream.str();
-				log("total goals " + s);
+			//	/*
+			//	if (training.IsInGoal(ball.GetLocation()))
+			//	{
+			//		if (timerScore < 1) { //display it once only
+			//			timerDisplay("score");
+			//			timerScore++;
+			//		}
+			//	}
+			//	*/
+			//}
+			//else {
+			//	/*
+			//	stringstream stream;
+			//	//stream << server.GetTotalScore(); //always 0 in custom training
+			//	auto goals = server.GetGoals();
+			//	stream << goals.Count();
+			//	string s = stream.str();
+			//	log("total goals " + s);
 
-				GoalWrapper goal = goals.Get(0);
-				*/
-			}
+			//	GoalWrapper goal = goals.Get(0);
+			//	*/
+			//}
 
 		}
 		else {
@@ -575,7 +561,7 @@ void MrSuluPlugin::log(std::string msg) {
 }
 
 bool MrSuluPlugin::canBeEnabled() {
-	return ((gameWrapper->IsInTutorial()) || (gameWrapper->IsInCustomTraining()));
+	return ((gameWrapper->IsInFreeplay()) || (gameWrapper->IsInCustomTraining()));
 }
 
 void MrSuluPlugin::enable()
